@@ -23,7 +23,7 @@ class DeltaBrokerView(viewsets.ModelViewSet):
         logger.info(f"Broker selection attempt: email={email}",extra={'email': email})
         client_id = request.data.get('client_id')
         if DeltaBroker.objects.filter(email=email).exists() and DeltaBroker.objects.filter(phone_number=phone).exists():
-            logger.error(f"Email or phone number already exists ", extra={'email': email})
+            logger.error(f"Email or phone number already exists email={email} ", extra={'email': email})
             return custom_response(message="email or phone_number already exists", status=0)
         if DeltaBroker.objects.filter(client_id=client_id).exists():
             return custom_response(message="client_id already exists", status=0)
