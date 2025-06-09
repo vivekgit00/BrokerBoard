@@ -114,3 +114,22 @@ class DeltaBrokerView(viewsets.ModelViewSet):
             logger.error("OTP Not Verified", extra={'email': email})
             return custom_response(message="OTP Not Verified", status=0)
 
+    @action(methods=['delete'], detail=False, url_path='delete_profile')
+    def delete_profile(self, request):
+        email = request.data.get('email')
+        logger.info(f"Profile Delete Attempt: email={email}", extra={'email': email})
+        if not DeltaBroker.objects.filter(email=email).exists():
+            return custom_response(message="email not exists", status=0)
+        DeltaBroker.objects.filter(email=email).delete()
+        logger.info(f"Profile Deleted Successfully: email={email}", extra={'email': email})
+        return custom_response(message="Profile Deleted Successfully", status=1)
+    
+    @action(methods=['get'], detail=False, url_path='get_profile')
+    def get_profile(self, request):
+        email = request.query_params.get('email')
+        logger.info(f"Profile Get Attempt: email={email}", extra={'email': email})
+        if not DeltaBroker.objects.filter(email=email).exists():
+            return custom_response(message="email not exists", status=0)
+        serializer = DeltaBrokerSerializer(DeltaBroker.objects.get(email=email))
+        logger.info(f"Profile Get Successfully: email={email}", extra={'email': email})
+        return custom_response(message="Profile Get Successfully", status=1, data=serializer.data)
