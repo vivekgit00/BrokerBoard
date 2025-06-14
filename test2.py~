@@ -1,0 +1,39 @@
+import websocket
+import json
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+
+def subscribe_symbols(symbols, channel_name):
+
+    def on_message(ws, message):
+        data = json.loads(message)
+        print("Received from Delta:", data)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.send)(channel_name, {
+            "type": "send_ltp",
+            "text": json.dumps(data)
+        })
+
+    def on_open(ws):
+        print("Connected to Delta")
+        payload = {
+            "type": "subscribe",
+            "payload": {
+                "channels": [
+                    {
+                        "name": "candlestick_1m",
+                        "symbols": symbols
+                    }
+                ]
+            }
+        }
+        ws.send(json.dumps(payload))
+
+    ws = websocket.WebSocketApp(
+        "wss://socket.india.delta.exchange",
+        on_message=on_message,
+        on_open=on_open
+    )
+    ws.on_open = on_open
+    ws.run_forever()

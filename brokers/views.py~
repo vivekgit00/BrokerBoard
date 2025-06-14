@@ -6,7 +6,12 @@ from brokers.utils import custom_response, email_password, send_otp_email
 from django.utils.crypto import get_random_string
 import  random, string
 import logging
-
+from rest_framework.response import Response
+import websocket
+import json
+# from .delta_client import active_symbols, client_symbol_map
+from .delta_client import subscribe_symbols
+import threading
 logger = logging.getLogger('custom')
 
 
@@ -123,6 +128,7 @@ class DeltaBrokerView(viewsets.ModelViewSet):
         DeltaBroker.objects.filter(email=email).delete()
         logger.info(f"Profile Deleted Successfully: email={email}", extra={'email': email})
         return custom_response(message="Profile Deleted Successfully", status=1)
+    
     @action(methods=['get'], detail=False, url_path='get_profile')
     def get_profile(self, request):
         email = request.query_params.get('email')
@@ -132,3 +138,25 @@ class DeltaBrokerView(viewsets.ModelViewSet):
         serializer = DeltaBrokerSerializer(DeltaBroker.objects.get(email=email))
         logger.info(f"Profile Get Successfully: email={email}", extra={'email': email})
         return custom_response(message="Profile Get Successfully", status=1, data=serializer.data)
+
+class DeltaWebsocket(viewsets.ViewSet):
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)
+    #     self.symbols = []
+    #     with open('delta_symbols.json', 'r') as f:
+    #         self.symbols =json.load(f)
+
+    @action(methods=['post'], detail=False, url_path='live_feed')
+    def live_feed(self, request):
+        symbols = request.data.get("symbols")  # e.g., ["BTCUSD", "ETHUSD"]
+        channel_name = request.data.get("channel")  # frontend's WebSocket channel name
+        type = request.data.get("type")
+
+        if not symbols or not channel_name:
+            return custom_response(message="Missing symbols or channel name", status=0)
+
+        # Launch Delta socket in background
+        thread = threading.Thread(target=subscribe_symbols, args=(symbols, channel_name, type))
+        thread.start()
+
+        return custom_response(message="Subscribed successfully", status=1)
