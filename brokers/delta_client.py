@@ -3,10 +3,11 @@ import json
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+active_symbol = {}
 
 def subscribe_symbols(symbols, channel_name, request_type):
     ws = None
-
+    global active_symbol
     def on_message(ws_inner, message):
         data = json.loads(message)
         print("Received from Delta:", data)
@@ -20,6 +21,7 @@ def subscribe_symbols(symbols, channel_name, request_type):
         print(f"Socket Error: {error}")
 
     def unsubscribe_symbols(ws_inner, channel, symbols):
+        print("unsubscribe")
         payload = {
             "type": "unsubscribe",
             "payload": {
@@ -33,8 +35,13 @@ def subscribe_symbols(symbols, channel_name, request_type):
         }
         print("Unsubscribe Payload:", payload)
         ws_inner.send(json.dumps(payload))
+        if channel_name in active_symbol:
+            active_symbol[channel_name] -= set(symbols)
+            if not active_symbol[channel_name]:
+                del active_symbol[channel_name]
 
     def subscribe_symbols(ws_inner, channel, symbols):
+        print("subscribe")
         payload = {
             "type": "subscribe",
             "payload": {
@@ -47,6 +54,7 @@ def subscribe_symbols(symbols, channel_name, request_type):
             }
         }
         ws_inner.send(json.dumps(payload))
+        active_symbol[channel_name] = set(symbols)
 
     def on_open(ws_inner):
         print("Connected to Delta")

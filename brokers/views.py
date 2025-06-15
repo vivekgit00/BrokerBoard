@@ -150,13 +150,14 @@ class DeltaWebsocket(viewsets.ViewSet):
     def live_feed(self, request):
         symbols = request.data.get("symbols")  # e.g., ["BTCUSD", "ETHUSD"]
         channel_name = request.data.get("channel")  # frontend's WebSocket channel name
-        type = request.data.get("type")
-        print(type)
+        request_type = request.data.get("request_type")
+        print(request_type)
         if not symbols or not channel_name:
             return custom_response(message="Missing symbols or channel name", status=0)
 
+        thread = False
         # Launch Delta socket in background
-        thread = threading.Thread(target=subscribe_symbols, args=(symbols, channel_name, type))
+        thread = threading.Thread(target=subscribe_symbols, args=(symbols, channel_name, request_type))
         thread.start()
-
-        return custom_response(message="Subscribed successfully", status=1)
+        
+        return custom_response(message=f"{request_type.title()} request sent", status=1)
