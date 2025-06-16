@@ -6,12 +6,12 @@ from brokers.utils import custom_response, email_password, send_otp_email
 from django.utils.crypto import get_random_string
 import  random, string
 import logging
-from rest_framework.response import Response
-import websocket
-import json
 # from .delta_client import active_symbols, client_symbol_map
-from .delta_client import subscribe_symbols
+from Delta.websocket import subscribe_symbols
 import threading
+from .serializer import OrdersSerializer
+from .models import Orders
+
 logger = logging.getLogger('custom')
 
 
@@ -160,4 +160,9 @@ class DeltaWebsocket(viewsets.ViewSet):
         thread = threading.Thread(target=subscribe_symbols, args=(symbols, channel_name, request_type))
         thread.start()
         
-        return custom_response(message=f"{request_type.title()} request sent", status=1)
+        return custom_response(message=f"{request_type} request sent", status=1)
+
+class ordersView(viewsets.ModelViewSet):
+    queryset = Orders.objects.all()
+    serializer_class = OrdersSerializer
+

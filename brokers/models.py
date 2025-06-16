@@ -44,3 +44,44 @@ class APILog(models.Model):
     class Meta:
         db_table = 'api_logs'
         ordering = ['-datetime']
+
+class Orders(models.Model):
+    user = models.ForeignKey(DeltaBroker, to_field="email", db_column="email", on_delete=models.SET_NULL, null=True, blank=True)
+    order_id = models.BigIntegerField(null=True, blank=True)
+    product_id = models.IntegerField(null=True, blank=True)
+    client_order_id = models.CharField(max_length=24, null=True, blank=True)
+    symbol = models.CharField(max_length=10, null=True, blank=True)
+    side = models.CharField(max_length=10, null=True, blank=True)
+    size = models.IntegerField(null=True, blank=True)
+    order_type = models.CharField(max_length=50, null=True, blank=True)
+    stop_order_type = models.CharField(max_length=50, null=True, blank=True)
+    stop_price = models.CharField(max_length=50, null=True, blank=True)
+
+    trail_amount = models.CharField(max_length=50, null=True, blank=True)
+    stop_trigger_method = models.CharField(max_length=50, null=True, blank=True)
+
+    bracket_stop_trigger_method = models.CharField(max_length=50, null=True, blank=True)
+    bracket_stop_loss_limit_price = models.CharField(max_length=50, null=True, blank=True)
+    bracket_stop_loss_price = models.CharField(max_length=50, null=True, blank=True)
+    bracket_trail_amount = models.CharField(max_length=50, null=True, blank=True)
+    bracket_take_profit_limit_price = models.CharField(max_length=50, null=True, blank=True)
+    bracket_take_profit_price = models.CharField(max_length=50, null=True, blank=True)
+
+    time_in_force = models.CharField(max_length=50, null=True, blank=True)
+    mmp = models.CharField(max_length=50, null=True, blank=True)
+    post_only = models.CharField(max_length=50, null=True, blank=True)
+    reduce_only = models.CharField(max_length=50, null=True, blank=True)
+    cancel_orders_accepted = models.CharField(max_length=50, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'orders'
+        ordering = ['-created_at']
+
+
+
+
+
+
