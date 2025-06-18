@@ -13,7 +13,7 @@ class DeltaBroker(models.Model):
     city = models.CharField(max_length=50, null=True, blank=True)
     password = models.CharField(max_length=16, null=True, blank=True)
     broker_name = models.CharField(max_length=50, null=True, blank=True)
-
+    set_password = models.BooleanField(default=False)
     otp_code = models.CharField(max_length=6, null=True, blank=True)
     otp_verified = models.BooleanField(default=False)
 
@@ -54,28 +54,33 @@ class Orders(models.Model):
     side = models.CharField(max_length=10, null=True, blank=True)
     size = models.IntegerField(null=True, blank=True)
     order_type = models.CharField(max_length=50, null=True, blank=True)
-    stop_order_type = models.CharField(max_length=50, null=True, blank=True)
-    stop_price = models.CharField(max_length=50, null=True, blank=True)
-
-    trail_amount = models.CharField(max_length=50, null=True, blank=True)
-    stop_trigger_method = models.CharField(max_length=50, null=True, blank=True)
-
-    bracket_stop_trigger_method = models.CharField(max_length=50, null=True, blank=True)
-    bracket_stop_loss_limit_price = models.CharField(max_length=50, null=True, blank=True)
-    bracket_stop_loss_price = models.CharField(max_length=50, null=True, blank=True)
-    bracket_trail_amount = models.CharField(max_length=50, null=True, blank=True)
-    bracket_take_profit_limit_price = models.CharField(max_length=50, null=True, blank=True)
-    bracket_take_profit_price = models.CharField(max_length=50, null=True, blank=True)
+    limit_price = models.CharField(max_length=50, null=True, blank=True)
 
     time_in_force = models.CharField(max_length=50, null=True, blank=True)
-    mmp = models.CharField(max_length=50, null=True, blank=True)
     post_only = models.CharField(max_length=50, null=True, blank=True)
     reduce_only = models.CharField(max_length=50, null=True, blank=True)
-    cancel_orders_accepted = models.CharField(max_length=50, null=True, blank=True)
 
+    order_status = models.CharField(max_length=50, null=True, blank=True)
+#     stop_order_type = models.CharField(max_length=50, null=True, blank=True)
+#     stop_price = models.CharField(max_length=50, null=True, blank=True)
+#
+#     trail_amount = models.CharField(max_length=50, null=True, blank=True)
+#     stop_trigger_method = models.CharField(max_length=50, null=True, blank=True)
+#
+#     bracket_stop_trigger_method = models.CharField(max_length=50, null=True, blank=True)
+#     bracket_stop_loss_limit_price = models.CharField(max_length=50, null=True, blank=True)
+#     bracket_stop_loss_price = models.CharField(max_length=50, null=True, blank=True)
+#     bracket_trail_amount = models.CharField(max_length=50, null=True, blank=True)
+#     bracket_take_profit_limit_price = models.CharField(max_length=50, null=True, blank=True)
+#     bracket_take_profit_price = models.CharField(max_length=50, null=True, blank=True)
+#
+#     mmp = models.CharField(max_length=50, null=True, blank=True)
+
+#     cancel_orders_accepted = models.CharField(max_length=50, null=True, blank=True)
+#
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+#
     class Meta:
         db_table = 'orders'
         ordering = ['-created_at']

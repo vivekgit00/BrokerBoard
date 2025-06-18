@@ -11,6 +11,8 @@ from Delta.websocket import subscribe_symbols
 import threading
 from .serializer import OrdersSerializer
 from .models import Orders
+from .consumer import CHANNEL_NAME
+from Delta.websocket import LTP_DATA
 
 logger = logging.getLogger('custom')
 
@@ -56,7 +58,7 @@ class DeltaBrokerView(viewsets.ModelViewSet):
             return custom_response(message="password not exists", status=0)
         serializer = DeltaBrokerSerializer(DeltaBroker.objects.get(email=email))
         logger.info(f"Login attempt Successful: email={email}", extra={'email': email})
-        return custom_response(message="Login Successful", status=1)
+        return custom_response(message="Login Successful", status=1, data=serializer.data)
 
     @action(methods=['post'], detail=False, url_path='change_password')
     def change_password(self, request):
@@ -70,7 +72,7 @@ class DeltaBrokerView(viewsets.ModelViewSet):
         if not DeltaBroker.objects.filter(password=password).exists():
             logger.error(f"password not match: email={email}", extra={'email': email}  )
             return custom_response(message="password not exists", status=0)
-        DeltaBroker.objects.filter(email=email).update(password=new_password)
+        DeltaBroker.objects.filter(email=email).update(password=new_password, set_password=True)
         logger.info(f"Password Changed Successfully: email={email}", extra={'email': email})
         return custom_response(message="Password Changed Successfully", status=1)
 
@@ -149,20 +151,38 @@ class DeltaWebsocket(viewsets.ViewSet):
     @action(methods=['post'], detail=False, url_path='live_feed')
     def live_feed(self, request):
         symbols = request.data.get("symbols")  # e.g., ["BTCUSD", "ETHUSD"]
-        channel_name = request.data.get("channel")  # frontend's WebSocket channel name
+        channel = request.data.get("channel")  # frontend's WebSocket channel name
         request_type = request.data.get("request_type")
         print(request_type)
-        if not symbols or not channel_name:
-            return custom_response(message="Missing symbols or channel name", status=0)
-
+        if not symbols or not channel and isinstance(symbols, list):
+            return custom_response(message="Missing symbols in list  or channel name", status=0)
+        ltp_symbol = []
+        for symbol in symbols:
+            data =   symbol.upper()
+            ltp_symbol.append(data)
         thread = False
-        # Launch Delta socket in background
-        thread = threading.Thread(target=subscribe_symbols, args=(symbols, channel_name, request_type))
-        thread.start()
-        
-        return custom_response(message=f"{request_type} request sent", status=1)
+        # print(CHANNEL_NAME, type(CHANNEL_NAME))
+        if channel in CHANNEL_NAME and request_type == "subscribe":
+            thread = threading.Thread(target=subscribe_symbols, args=(ltp_symbol, channel, request_type))
+            thread.start()
+            thread = True
+            return custom_response(message=f"{request_type} request sent", status=1)
+        else:
+            # if request_type == "unsubscribe":
+                # thread.join()
+            return custom_response(message="Invalid channel name", status=0)
 
-class ordersView(viewsets.ModelViewSet):
+
+class OrdersView(viewsets.ModelViewSet):
     queryset = Orders.objects.all()
     serializer_class = OrdersSerializer
+
+    @action(methods=['post'], detail=False, url_path='place_order')
+    def place_order(self, request):
+        print(LTP_DATA, type(LTP_DATA), "####"*10)
+        serializer = OrdersSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return custom_response(message="Order Placed Successfully", status=1, data=serializer.data)
+        return custom_response(message="Order Not Placed", status=0)
 

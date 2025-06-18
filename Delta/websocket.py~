@@ -6,9 +6,9 @@ from channels.layers import get_channel_layer
 LTP_DATA = {}
 
 def subscribe_symbols(symbols, channel_name, request_type):
-    # ws = None
+    ws = None
     global LTP_DATA
-    def on_message(ws, message):
+    def on_message(ws_inner, message):
         data = json.loads(message)
 
         print("Received from Delta:", data)
@@ -23,10 +23,10 @@ def subscribe_symbols(symbols, channel_name, request_type):
             "text": json.dumps(data)
         })
 
-    def on_error(ws, error):
+    def on_error(ws_inner, error):
         print(f"Socket Error: {error}")
 
-    def unsubscribe_symbols(ws, channel, symbols):
+    def unsubscribe_symbols(ws_inner, channel, symbols):
         print("unsubscribe")
         payload = {
             "type": "unsubscribe",
@@ -40,8 +40,8 @@ def subscribe_symbols(symbols, channel_name, request_type):
             }
         }
         print("Unsubscribe Payload:", payload)
-        ws.send(json.dumps(payload))
-    def subscribe_symbols(ws, channel, symbols):
+        ws_inner.send(json.dumps(payload))
+    def subscribe_symbols(ws_inner, channel, symbols):
         print("subscribe")
         payload = {
             "type": "subscribe",
@@ -54,14 +54,14 @@ def subscribe_symbols(symbols, channel_name, request_type):
                 ]
             }
         }
-        ws.send(json.dumps(payload))
+        ws_inner.send(json.dumps(payload))
 
-    def on_open(ws):
+    def on_open(ws_inner):
         print("Connected to Delta")
         if request_type == "subscribe":
-            subscribe_symbols(ws, "spot_price", symbols)
+            subscribe_symbols(ws_inner, "spot_price", symbols)
         elif request_type == "unsubscribe":
-            unsubscribe_symbols(ws, "spot_price", symbols)
+            unsubscribe_symbols(ws_inner, "spot_price", symbols)
 
     ws = websocket.WebSocketApp(
         "wss://socket.india.delta.exchange",

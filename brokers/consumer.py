@@ -4,15 +4,25 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 # from .delta_client import client_symbol_map, consumer_channels
-
+CHANNEL_NAME = set()
 class DeltaConsumer(AsyncWebsocketConsumer):
+
+    def __init__(self, *args,**kwargs):
+        self.ltp = {}
+        self.feed_opened = False
+
+        super().__init__(*args,**kwargs)
+
     async def connect(self):
+        global channel_name
         await self.accept()
         self.scope["session_id"] = self.channel_name
         await self.send(text_data=json.dumps({
             "message": "connected",
-            "channel": self.channel_name  # Send this to frontend to use in API
+            "channel": self.channel_name
         }))
+        CHANNEL_NAME.add(self.channel_name)
+
         print("consumer------->", self.channel_name)
     async def send_ltp(self, event):
         await self.send(text_data=event["text"])

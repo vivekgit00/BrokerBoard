@@ -1,13 +1,50 @@
-import requests
-import json
-responce = requests.get("https://api.delta.exchange/v2/products")
-data = responce.json()['result']
-# print(data.keys())
-results = []
-data_dict = {}
-for data in data:
-    print(str(data['id'])+ " " + data['symbol'])
-    results.append({data['symbol']: data['id']})
+# import requests
+# import json
+# responce = requests.get("https://api.delta.exchange/v2/products")
+# data = responce.json()['result']
+# # print(data.keys())
+# results = []
+# data_dict = {}
+# for data in data:
+#     print(str(data['id'])+ " " + data['symbol'])
+#     results.append({data['symbol']: data['id']})
+#
+# with open('dict_files\\product_key.json', 'w') as f:
+#     json.dump(results, f)
 
-with open('dict_files\\product_key.json', 'w') as f:
-    json.dump(results, f)
+
+import threading
+import time
+
+# This Event object will be used to signal the thread to stop
+stop_event = threading.Event()
+
+# Thread task
+def background_task(name):
+    print(f"[{name}] Started.")
+    # while not stop_event.is_set():
+    #     print(f"[{name}] Running...")
+    #     time.sleep(1)  # Simulate work
+    return  "ok"
+
+# Create the thread
+worker_thread = threading.Thread(target=background_task, args=("Worker-1",), daemon=True)
+
+# Start the thread
+print("Starting thread...")
+worker_thread.start()
+
+# Let it run for 5 seconds
+time.sleep(5)
+
+# Stop the thread using the event
+print("Stopping thread...")
+stop_event.set()
+
+# Wait for the thread to clean up
+worker_thread.join()
+
+# Check if thread is alive
+print("Thread is alive?", worker_thread.is_alive())
+
+print("Main thread done.")

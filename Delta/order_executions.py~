@@ -8,8 +8,8 @@ from Delta.websocket import LTP_DATA
 
 
 class OrderType(enum.Enum):
-    LIMIT = "limit_order"
-    MARKET = "market_order"
+    LIMIT = ""
+    MARKET = 2
 
 class OrderExecution:
     def __init__(self, order_id, price, quantity, order_type, status):
