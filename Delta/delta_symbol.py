@@ -1,8 +1,8 @@
 import json
-with open('../dict_files/delta_symbols.json', 'r') as f:
-    symbols = json.load(f)
-
-print(symbols)
+# with open('../dict_files/delta_symbols.json', 'r') as f:
+#     symbols = json.load(f)
+#
+# print(symbols)
 
 
 

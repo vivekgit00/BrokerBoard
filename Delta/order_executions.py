@@ -4,7 +4,7 @@ import hmac
 import requests
 import time
 import enum
-from Delta.websocket import LTP_DATA
+from Delta.delta_websocket import LTP_DATA
 
 
 class OrderType(enum.Enum):

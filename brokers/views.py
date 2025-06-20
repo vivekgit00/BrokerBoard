@@ -6,13 +6,16 @@ from brokers.utils import custom_response, email_password, send_otp_email
 from django.utils.crypto import get_random_string
 import  random, string
 import logging
+# from  Delta.delta_websocket import subscribe_symbols, async_to_sync
 # from .delta_client import active_symbols, client_symbol_map
-from Delta.websocket import subscribe_symbols
 import threading
 from .serializer import OrdersSerializer
 from .models import Orders
 from .consumer import CHANNEL_NAME
-from Delta.websocket import LTP_DATA
+from Delta.delta_websocket import ws_manager
+import json
+from Delta.delta_websocket import LTP
+# from Delta.delta_websocket import  SUBSCRIBE_QUEUE,UNSUBSCRIBE_QUEUE
 
 logger = logging.getLogger('custom')
 
@@ -142,36 +145,64 @@ class DeltaBrokerView(viewsets.ModelViewSet):
         return custom_response(message="Profile Get Successfully", status=1, data=serializer.data)
 
 class DeltaWebsocket(viewsets.ViewSet):
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
-    #     self.symbols = []
-    #     with open('delta_symbols.json', 'r') as f:
-    #         self.symbols =json.load(f)
-
     @action(methods=['post'], detail=False, url_path='live_feed')
     def live_feed(self, request):
-        symbols = request.data.get("symbols")  # e.g., ["BTCUSD", "ETHUSD"]
-        channel = request.data.get("channel")  # frontend's WebSocket channel name
+        # Input validation
+        symbols = request.data.get("symbols", [])
+        channel = request.data.get("channel")
         request_type = request.data.get("request_type")
-        print(request_type)
-        if not symbols or not channel and isinstance(symbols, list):
-            return custom_response(message="Missing symbols in list  or channel name", status=0)
-        ltp_symbol = []
-        for symbol in symbols:
-            data =   symbol.upper()
-            ltp_symbol.append(data)
-        thread = False
-        # print(CHANNEL_NAME, type(CHANNEL_NAME))
-        if channel in CHANNEL_NAME and request_type == "subscribe":
-            thread = threading.Thread(target=subscribe_symbols, args=(ltp_symbol, channel, request_type))
-            thread.start()
-            thread = True
-            return custom_response(message=f"{request_type} request sent", status=1)
-        else:
-            # if request_type == "unsubscribe":
-                # thread.join()
-            return custom_response(message="Invalid channel name", status=0)
 
+        # Validate inputs
+        if not isinstance(symbols, list):
+            return custom_response(message="Symbols must be a list", status=0)
+        if not channel and channel != CHANNEL_NAME:
+            return custom_response(message="Channel name is required or Not Match", status=0)
+        if request_type not in ["subscribe", "unsubscribe"]:
+            return custom_response(message="Invalid request_type", status=0)
+        if not symbols:
+            return custom_response(message="No symbols provided", status=0)
+
+        ltp_symbols = []
+        not_found_symbols = []
+
+        try:
+            with open('dict_files/spot_price.json', 'r') as f:
+                spot_price = json.load(f)
+
+                for symbol in symbols:
+                    symbol_upper = symbol.upper()
+                    found = False
+
+                    for item in spot_price:
+                        for key, value in item.items():
+                            if symbol_upper == value.upper():
+                                ltp_symbols.append(key)
+                                found = True
+                                break
+                        if found:
+                            break
+
+                    if not found:
+                        not_found_symbols.append(symbol)
+
+        except Exception as e:
+            return custom_response(message=f"Symbol mapping error: {str(e)}", status=0)
+
+        if request_type == "subscribe":
+            ws_manager.subscribe(ltp_symbols, channel, email="test@gmail.com")
+            return custom_response(message=f"{ltp_symbols} symbols subscribed", status=1)
+
+        elif request_type == "unsubscribe":
+            ws = ws_manager.unsubscribe(ltp_symbols)
+            if not ws:
+                return custom_response(message=f"{ltp_symbols} symbols not subscribed", status=0)
+            custom_response(message=f"{ltp_symbols} symbols unsubscribed", status=1)
+        else:
+            return custom_response(message=f"Invalid request_type", status=0)
+    @action(methods=['get'], detail=False, url_path='ltp_feed')
+    def ltp_feed(self, request):
+        # Input validation
+        return custom_response(message="LTP Feed", status=1, data=LTP)
 
 class OrdersView(viewsets.ModelViewSet):
     queryset = Orders.objects.all()
@@ -179,7 +210,7 @@ class OrdersView(viewsets.ModelViewSet):
 
     @action(methods=['post'], detail=False, url_path='place_order')
     def place_order(self, request):
-        print(LTP_DATA, type(LTP_DATA), "####"*10)
+        # print(LTP_DATA, type(LTP_DATA), "####"*10)
         serializer = OrdersSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
