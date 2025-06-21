@@ -155,8 +155,9 @@ class DeltaWebsocket(viewsets.ViewSet):
         # Validate inputs
         if not isinstance(symbols, list):
             return custom_response(message="Symbols must be a list", status=0)
-        if not channel and channel != CHANNEL_NAME:
-            return custom_response(message="Channel name is required or Not Match", status=0)
+        print(channel, CHANNEL_NAME)
+        if channel not in CHANNEL_NAME:
+            return custom_response(message="Invalid channel", status=0)
         if request_type not in ["subscribe", "unsubscribe"]:
             return custom_response(message="Invalid request_type", status=0)
         if not symbols:
@@ -194,6 +195,7 @@ class DeltaWebsocket(viewsets.ViewSet):
 
         elif request_type == "unsubscribe":
             ws = ws_manager.unsubscribe(ltp_symbols)
+            print(ws)
             if not ws:
                 return custom_response(message=f"{ltp_symbols} symbols not subscribed", status=0)
             custom_response(message=f"{ltp_symbols} symbols unsubscribed", status=1)

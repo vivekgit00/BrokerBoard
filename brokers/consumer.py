@@ -10,7 +10,6 @@ class DeltaConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args,**kwargs):
         self.ltp = {}
         self.feed_opened = False
-
         super().__init__(*args,**kwargs)
 
     async def connect(self):

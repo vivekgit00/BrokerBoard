@@ -141,8 +141,10 @@ class WebSocketManager:
                 self.ws.send(json.dumps(payload))
                 self.symbols -= to_unsub
                 print(f"Unsubscribed from {to_unsub}")
+                return True
             except websocket.WebSocketConnectionClosedException:
                 print("WebSocket closed during unsubscribe.")
+                return False
 
     def stop(self):
         self.running = False

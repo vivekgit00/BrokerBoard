@@ -22,7 +22,7 @@ class DeltaConsumer(AsyncWebsocketConsumer):
             "channel": self.channel_name
         }))
         CHANNEL_NAME.add(self.channel_name)
-        print(CHANNEL_NAME, type(CHANNEL_NAME))
+
         print("consumer------->", self.channel_name)
     async def send_ltp(self, event):
         await self.send(text_data=event["text"])
