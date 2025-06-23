@@ -5,8 +5,12 @@ import websocket
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import logging
+from enum import Enum
 logger = logging.getLogger('custom')
 
+class OrderType(Enum):
+  MARKET = 'market_order'
+  LIMIT = 'limit_order'
 
 LTP = {}
 _ltp_lock = threading.Lock()

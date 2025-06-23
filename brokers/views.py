@@ -16,7 +16,7 @@ from Delta.delta_websocket import ws_manager
 import json
 from Delta.delta_websocket import LTP
 # from Delta.delta_websocket import  SUBSCRIBE_QUEUE,UNSUBSCRIBE_QUEUE
-
+from django_ratelimit.decorators import ratelimit
 logger = logging.getLogger('custom')
 
 
@@ -133,7 +133,7 @@ class DeltaBrokerView(viewsets.ModelViewSet):
         DeltaBroker.objects.filter(email=email).delete()
         logger.info(f"Profile Deleted Successfully: email={email}", extra={'email': email})
         return custom_response(message="Profile Deleted Successfully", status=1)
-    
+
     @action(methods=['get'], detail=False, url_path='get_profile')
     def get_profile(self, request):
         email = request.query_params.get('email')
@@ -206,10 +206,14 @@ class DeltaWebsocket(viewsets.ViewSet):
         # Input validation
         return custom_response(message="LTP Feed", status=1, data=LTP)
 
+
+
+
 class OrdersView(viewsets.ModelViewSet):
     queryset = Orders.objects.all()
     serializer_class = OrdersSerializer
 
+    @ratelimit(key='ip', rate='3/m', block=True)
     @action(methods=['post'], detail=False, url_path='place_order')
     def place_order(self, request):
         # print(LTP_DATA, type(LTP_DATA), "####"*10)
@@ -218,4 +222,3 @@ class OrdersView(viewsets.ModelViewSet):
             serializer.save()
             return custom_response(message="Order Placed Successfully", status=1, data=serializer.data)
         return custom_response(message="Order Not Placed", status=0)
-

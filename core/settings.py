@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     #3rd party
     'rest_framework',
     'corsheaders',
+    # 'django-ratelimit',
 
     #app
     'brokers',
@@ -183,3 +184,12 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+
+#rate limit
+# CACHES = {
+#     'default': {},
+#     'cache-for-ratelimiting': {},
+# }
+#
+# RATELIMIT_USE_CACHE = 'cache-for-ratelimiting'
